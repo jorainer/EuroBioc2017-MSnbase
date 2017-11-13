@@ -1,0 +1,131 @@
+#+AUTHOR: Johannes Rainer
+#+EMAIL: johannes.rainer@eurac.edu
+#+DATE: December, 2017
+#+SETUPFILE: orgsetup.org
+
+* Enabling analysis of large scale metabolomics/proteomics data: /on-the-fly/ data access in =MSnbase=
+
+EuroBioc2017, Cambridge.
+
++ Updates to =mzR=, =MSnbase= and =xcms= packages:
+  - MS data write support.
+  - /on-the-fly/ data access.
+  - towards a common MS infrastructure: =xcms= re-uses classes and concepts from
+    =MSnbase=.
+
+** LC-MS introduction
+
++ Mass spectrometry (MS)
+  #+ATTR_ORG: :width 100
+  [[file:images/MS.png]]
++ Liquid chromatography (LC) MS
+
+** =onDisk= /vs/ =inMem= data; why?
+
++ _Example_: load a MS file
+  #+BEGIN_SRC R
+    library(MSnbase)
+    library(pryr)
+
+    ## Read a single MS level 1 file
+    msd <- readMSData("data/150616_POOL_IntraP_S_POS_6.mzML", mode = "onDisk")
+
+    ## Object size?
+    object_size(msd)
+
+    ## Number of spectra
+    length(msd)
+
+    ## Number of values of first spectrum
+    length(mz(msd[[1]]))
+  #+END_SRC
++ Memory footprint: 977 MB (=inMem=) /vs/ 588 kB (=onDisk=).
++ Reading data on demand: relatively fast for indexed mzML files.
+
+** Application example: /centroiding/ of MS data
+
++ _Example_: plot MS data for a metabolite:
+  #+BEGIN_SRC R
+    library(xcms)
+
+    ## m/z for Taurine [M+H]+
+    taur_mz <- 126.02194
+    taur_rt <- c(169, 176)
+
+    ## Extract the MS data for this ion
+    taur_msd <- extractMsData(msd, mz = c(taur_mz - 0.01, taur_mz + 0.01),
+			      rt = taur_rt)
+    plotMsData(taur_msd[[1]])
+    abline(h = taur_mz, col = "red", lty = 2)
+
+  #+END_SRC
+
++ centroiding: represent mass peaks by their /centroid/.
++ _Example_: plot the data for one spectrum
+  #+BEGIN_SRC R
+    library(magrittr)
+
+    ## Extract one spectrum for the metabolite
+    spct <- msd %>% filterAcquisitionNum(n = 619L) %>%
+	filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01))
+
+    par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
+    plot(mz(spct[[1]]), intensity(spct[[1]]), type = "h", ylab = "intensity",
+	 xlab = "m/z")
+    abline(v = taur_mz, lty = 2, col = "red")  
+  #+END_SRC
+
++ Data smoothing (=smooth=) and centroiding (=pickPeaks=). Not executed directly,
+  but placed into a /processing queue/.
+  #+BEGIN_SRC R
+    ## 1) smooth the spectrum data
+    ## 2) centroiding
+    cntr <- msd %>% smooth(method = "MovingAverage", halfWindowSize = 2L) %>%
+	pickPeaks()
+
+    ## ... not executed yet...
+    cntr@spectraProcessingQueue
+
+    ## Extract the MS data for our example ion
+    taur_cntr <- extractMsData(cntr, mz = c(taur_mz - 0.01, taur_mz + 0.01),
+			       rt = taur_rt)
+    plotMsData(taur_cntr[[1]])
+    abline(h = taur_mz, col = "red", lty = 2)
+  #+END_SRC
+
++ /Make persistent/: write to MS data.
+  _Example_: write the centroided data to disk.
+  #+BEGIN_SRC R
+    writeMSData(cntr, file = "centroided.mzML", copy = TRUE)
+
+    ## 1) All processings (smoothing and peak picking) are applied
+    ## 2) Data is exported as mzML
+  #+END_SRC
+
++ Chromatographic peak detection
+  _Example_: =findChromPeaks= to identify the Taurine peak
+  #+BEGIN_SRC R
+    ## Define the method and settings for peak detection
+    cwp <- CentWaveParam(peakwidth = c(2, 8))
+    xdata <- cntr %>% filterRt(rt = c(150, 180)) %>%
+	filterMz(mz = c(123, 128)) %>%
+	findChromPeaks(param = cwp)
+    chromPeaks(xdata, mz = taur_mz)
+
+  #+END_SRC
+
+** Finally
+
+Collaborative work
+- Laurent Gatto (CPU Cambridge, UK)
+- Sebastian Gibb
+- Johannes Rainer (Eurac Research, Italy)
+- Steffen Neumann (IPB Halle, Germany)
+
+*Thank you for your attention!*
+
+
+
+
+clone me! https://github.com/jotsetung/EuroBioc2017-MSnbase.git
+
