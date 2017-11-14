@@ -5,7 +5,7 @@
 
 * Enabling analysis of large scale metabolomics/proteomics data: /on-the-fly/ data access in =MSnbase=
 
-EuroBioc2017, Cambridge.
+*EuroBioc2017*, December 2017, Cambridge.
 
 + Updates to =mzR=, =MSnbase= and =xcms= packages:
   - MS data write support.
@@ -16,9 +16,9 @@ EuroBioc2017, Cambridge.
 ** LC-MS introduction
 
 + Mass spectrometry (MS)
-  #+ATTR_ORG: :width 100
   [[file:images/MS.png]]
 + Liquid chromatography (LC) MS
+  [[file:images/LCMS.png]]
 
 ** =onDisk= /vs/ =inMem= data; why?
 
@@ -61,7 +61,7 @@ EuroBioc2017, Cambridge.
   #+END_SRC
 
 + centroiding: represent mass peaks by their /centroid/.
-+ _Example_: plot the data for one spectrum
+  _Example_: plot the data for one spectrum
   #+BEGIN_SRC R
     library(magrittr)
 
@@ -75,25 +75,26 @@ EuroBioc2017, Cambridge.
     abline(v = taur_mz, lty = 2, col = "red")  
   #+END_SRC
 
-+ Data smoothing (=smooth=) and centroiding (=pickPeaks=). Not executed directly,
-  but placed into a /processing queue/.
++ =onDisk= data: lazy execution of data manipulations.
+  _Example:_ Data smoothing (=smooth=) and centroiding (=pickPeaks=).
   #+BEGIN_SRC R
     ## 1) smooth the spectrum data
-    ## 2) centroiding
+    ## 2) perform centroiding
     cntr <- msd %>% smooth(method = "MovingAverage", halfWindowSize = 2L) %>%
-	pickPeaks()
+        pickPeaks()
 
-    ## ... not executed yet...
+    ## ... not executed yet ...
     cntr@spectraProcessingQueue
 
-    ## Extract the MS data for our example ion
+    ## Extract the MS data for our example ion;
+    ## smoothing and centroiding performed on-the-fly
     taur_cntr <- extractMsData(cntr, mz = c(taur_mz - 0.01, taur_mz + 0.01),
-			       rt = taur_rt)
+                               rt = taur_rt)
     plotMsData(taur_cntr[[1]])
     abline(h = taur_mz, col = "red", lty = 2)
   #+END_SRC
 
-+ /Make persistent/: write to MS data.
++ /Make persistent/: write to MS data file.
   _Example_: write the centroided data to disk.
   #+BEGIN_SRC R
     writeMSData(cntr, file = "centroided.mzML", copy = TRUE)
@@ -108,8 +109,8 @@ EuroBioc2017, Cambridge.
     ## Define the method and settings for peak detection
     cwp <- CentWaveParam(peakwidth = c(2, 8))
     xdata <- cntr %>% filterRt(rt = c(150, 180)) %>%
-	filterMz(mz = c(123, 128)) %>%
-	findChromPeaks(param = cwp)
+        filterMz(mz = c(123, 128)) %>%
+        findChromPeaks(param = cwp)
     chromPeaks(xdata, mz = taur_mz)
 
   #+END_SRC
