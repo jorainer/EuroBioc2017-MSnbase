@@ -40,7 +40,7 @@
     length(mz(msd[[1]]))
   #+END_SRC
 + Memory footprint: 977 MB (=inMem=) /vs/ 588 kB (=onDisk=).
-+ Reading data on demand: relatively fast for indexed mzML files.
++ Reading data on demand: /relatively/ fast for indexed mzML files.
 
 ** Application example: /centroiding/ of MS data
 
@@ -54,24 +54,24 @@
 
     ## Extract the MS data for this ion
     taur_msd <- extractMsData(msd, mz = c(taur_mz - 0.01, taur_mz + 0.01),
-			      rt = taur_rt)
+                              rt = taur_rt)
     plotMsData(taur_msd[[1]])
     abline(h = taur_mz, col = "red", lty = 2)
 
   #+END_SRC
 
-+ centroiding: represent mass peaks by their /centroid/.
++ /centroiding/: represent mass peaks by their /centroid/.
   _Example_: plot the data for one spectrum
   #+BEGIN_SRC R
     library(magrittr)
 
     ## Extract one spectrum for the metabolite
     spct <- msd %>% filterAcquisitionNum(n = 619L) %>%
-	filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01))
+        filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01))
 
     par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
     plot(mz(spct[[1]]), intensity(spct[[1]]), type = "h", ylab = "intensity",
-	 xlab = "m/z")
+         xlab = "m/z")
     abline(v = taur_mz, lty = 2, col = "red")  
   #+END_SRC
 
