@@ -8,20 +8,14 @@
 *EuroBioc2017*, December 2017, Cambridge.
 
 + Updates to =mzR=, =MSnbase= and =xcms= packages:
-  - MS data write support.
   - /on-the-fly/ data access.
+  - MS data write support.
   - towards a common MS infrastructure: =xcms= re-uses classes and concepts from
     =MSnbase=.
 
-** LC-MS introduction
-
-+ Mass spectrometry (MS)
-  [[file:images/MS.png]]
-+ Liquid chromatography (LC) MS
-  [[file:images/LCMS.png]]
-
 ** =onDisk= /vs/ =inMem= data; why?
 
++ Keeping all data in memory prevents analysis of large experiments.
 + _Example_: load a MS file
   #+BEGIN_SRC R
     library(MSnbase)
@@ -42,9 +36,10 @@
 + Memory footprint: 977 MB (=inMem=) /vs/ 588 kB (=onDisk=).
 + Reading data on demand: /relatively/ fast for indexed mzML files.
 
-** Application example: /centroiding/ of MS data
+** Application example: /centroiding/ of /profile/ MS data
 
-+ _Example_: plot MS data for a metabolite:
++ Profile MS data?
+  _Example_: plot MS data for a metabolite:
   #+BEGIN_SRC R
     library(xcms)
 
@@ -60,8 +55,8 @@
 
   #+END_SRC
 
-+ /centroiding/: represent mass peaks by their /centroid/.
-  _Example_: plot the data for one spectrum
++ /centroiding/: represent mass peaks by their /centroid/
+  _Example_: plot one spectrum for the taurine ion.
   #+BEGIN_SRC R
     library(magrittr)
 
@@ -117,15 +112,13 @@
 
 ** Finally
 
+*Thank you for your attention!*
+
 Collaborative work
 - Laurent Gatto (CPU Cambridge, UK)
 - Sebastian Gibb
 - Johannes Rainer (Eurac Research, Italy)
 - Steffen Neumann (IPB Halle, Germany)
-
-*Thank you for your attention!*
-
-
 
 
 clone me! https://github.com/jotsetung/EuroBioc2017-MSnbase.git
