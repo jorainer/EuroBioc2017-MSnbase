@@ -9,11 +9,11 @@
 
 + Updates to =mzR=, =MSnbase= and =xcms= packages:
   - /on-the-fly/ data access.
-  - MS data write support.
+  - Mass spectrometry (MS) data write support.
   - towards a common MS infrastructure: =xcms= re-uses classes from
     =MSnbase=.
 
-** =onDisk= /vs/ =inMem= data; why?
+** =onDisk= /vs/ =inMem= data mode; why?
 
 + Keeping all data in memory prevents analysis of large experiments.
 + _Example_: load a MS file
@@ -27,8 +27,8 @@
     ## Object size?
     object_size(msd)
 
-    ## Number of spectra
-    head(fData(msd))
+    ## retention time per spectrum
+    head(rtime(msd))
 
   #+END_SRC
 + Memory footprint: 977 MB (=inMem=) /vs/ 600 kB (=onDisk=).
@@ -40,14 +40,18 @@
   _Example_: plot MS data for a metabolite:
   #+BEGIN_SRC R
     library(xcms)
+    library(magrittr)
 
     ## m/z for Taurine [M+H]+
     taur_mz <- 126.02194
     taur_rt <- c(169, 176)
 
     ## Extract the MS data for this ion
-    taur_msd <- extractMsData(msd, mz = c(taur_mz - 0.01, taur_mz + 0.01),
-                              rt = taur_rt)
+    taur_msd <- msd %>%
+        filterRt(rt = taur_rt) %>%
+        filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01)) %>%
+        extractMsData
+
     plotMsData(taur_msd[[1]])
 
   #+END_SRC
@@ -55,23 +59,22 @@
 + /centroiding/: represent mass peaks by their /centroid/
   _Example_: plot mass peak for taurin from one spectrum.
   #+BEGIN_SRC R
-    library(magrittr)
+    ## Identify values corresponding to one spectrum
+    idx <- grep("F1.S0623", rownames(taur_msd[[1]]))
 
-    ## Extract one spectrum for the metabolite
-    spct <- msd %>% filterAcquisitionNum(n = 619L) %>%
-        filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01))
-
+    ## Plot the m/z and intensity
     par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
-    plot(mz(spct[[1]]), intensity(spct[[1]]), type = "h", ylab = "intensity",
-         xlab = "m/z")
+    plot(taur_msd[[1]]$mz[idx], taur_msd[[1]]$i[idx],
+         type = "h", xlab = "m/z", ylab = "intensity")
   #+END_SRC
 
-+ =onDisk= data: lazy execution of data manipulations.
++ centroiding =onDisk= data: lazy execution of data manipulations.
   _Example:_ Data smoothing (=smooth=) and centroiding (=pickPeaks=).
   #+BEGIN_SRC R
     ## 1) smooth the spectrum data
     ## 2) perform centroiding
-    cntr <- msd %>% smooth(method = "MovingAverage", halfWindowSize = 2L) %>%
+    cntr <- msd %>%
+        smooth(method = "MovingAverage", halfWindowSize = 2L) %>%
         pickPeaks()
 
     ## ... not executed yet ...
@@ -79,8 +82,8 @@
 
     ## Extract the MS data for our example ion;
     ## smoothing and centroiding performed on-the-fly
-    taur_cntr <- extractMsData(cntr, mz = c(taur_mz - 0.01, taur_mz + 0.01),
-                               rt = taur_rt)
+    taur_cntr <- extractMsData(cntr, rt = taur_rt,
+                               mz = c(taur_mz - 0.01, taur_mz + 0.01))
     plotMsData(taur_cntr[[1]])
   #+END_SRC
 
