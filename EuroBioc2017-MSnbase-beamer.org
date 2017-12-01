@@ -1,0 +1,175 @@
+#+TITLE: Enabling analysis of large scale metabolomics/proteomics data: on-the-fly data access in MSnbase
+#+AUTHOR: Johannes Rainer
+#+EMAIL: johannes.rainer@eurac.edu
+#+DATE: December, 2017
+
+#+LATEX_HEADER: \usepackage[backend=bibtex,style=chem-rsc,hyperref=true]{biblatex}
+#+LATEX_HEADER: \usepackage{parskip}
+#+LATEX_HEADER: \addbibresource{~/Documents/Unison/bib/references.bib}
+#+LATEX_HEADER: \usepackage{inconsolata}
+#+LATEX_HEADER: \definecolor{lightgrey}{RGB}{241,246,245}
+#+LATEX_HEADER: \definecolor{solarizedlightbg}{HTML}{FCF4DC}
+#+LATEX_HEADER: \makeatletter
+#+LATEX_HEADER: \patchcmd{\@verbatim}
+#+LATEX_HEADER:   {\verbatim@font}
+#+LATEX_HEADER:   {\verbatim@font\scriptsize}
+#+LATEX_HEADER:   {}{}
+#+LATEX_HEADER: \makeatother
+
+#+PROPERTY: header-args :exports both
+#+PROPERTY: header-args :noweb yes
+#+PROPERTY: header-args :results output verbatim
+#+PROPERTY: header-args :tangle yes
+#+PROPERTY: header-args:R :session *R_EuroBioC201*
+
+#+LATEX_CLASS: beamer
+#+LATEX_CLASS_OPTIONS: [presentation,smaller]
+#+BEAMER_THEME: default
+#+BEAMER_COLOR_THEME: eurac
+#+BEAMER_INNER_THEME: circles
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+#+OPTIONS: toc:nil
+#+OPTIONS: H:2
+#+OPTIONS: email:nil
+#+OPTIONS: author:t
+
+#+BEGIN_SRC R :results silent :exports none
+  library(xcms)
+  library(MSnbase)
+  register(SerialParam())
+  if (file.exists("centroided.mzML"))
+      file.remove("centroided.mzML")
+#+END_SRC
+
+* Enabling analysis of large scale metabolomics/proteomics data: on-the-fly data access in MSnbase
+
+** Introduction
+*EuroBioc2017*, December 2017, Cambridge.
+
++ Updates to =mzR=, =MSnbase= and =xcms= packages:
+  - MS data write support.
+  - /on-the-fly/ data access.
+  - towards a common MS infrastructure: =xcms= re-uses classes from =MSnbase=.
+
+** =onDisk= /vs/ =inMem= data; why?
+
++ Keeping all data in memory prevents analysis of large experiments.
++ _Example_: load a MS file
+  #+BEGIN_SRC R :exports both :results output verbatim
+    library(MSnbase)
+    library(pryr)
+
+    ## Read a single MS level 1 file
+    msd <- readMSData("data/150616_POOL_IntraP_S_POS_6.mzML", mode = "onDisk")
+
+    ## Object size?
+    object_size(msd)
+  #+END_SRC
++ Memory footprint: 977 MB (=inMem=) /vs/ 600 kB (=onDisk=).
++ Reading data on demand: /relatively/ fast for indexed mzML files.
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ Profile MS data?
++ _Example_: plot MS data for a metabolite:
+  #+BEGIN_SRC R :results output graphics :file taurin-msdata.pdf :width 8 :height 5
+    library(xcms)
+
+    ## m/z for Taurine [M+H]+
+    taur_mz <- 126.02194
+    taur_rt <- c(169, 176)
+
+    ## Extract the MS data for this ion
+    taur_msd <- extractMsData(msd, mz = c(taur_mz - 0.01, taur_mz + 0.01),
+                              rt = taur_rt)
+    plotMsData(taur_msd[[1]])
+
+  #+END_SRC
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ Profile-mode MS data for Taurine [M+H]+ ion.
+#+ATTR_LATEX: :center :placement [H] :width 11cm
+[[file:taurin-msdata.pdf]]
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ /centroiding/: represent mass peaks by their /centroid/.
++ _Example_: plot mass peak for taurin from one spectrum.
+  #+BEGIN_SRC R :results output graphics :file taurin-spectrum.pdf :width 8 :height 5
+    library(magrittr)
+
+    ## Extract one spectrum for the metabolite
+    spct <- msd %>% filterAcquisitionNum(n = 619L) %>%
+        filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01))
+
+    par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
+    plot(mz(spct[[1]]), intensity(spct[[1]]), type = "h", ylab = "intensity",
+         xlab = "m/z")
+  #+END_SRC
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ Taurin ion mass peak in one spectrum.
+#+ATTR_LATEX: :center :placement [H] :width 11cm
+[[file:taurin-spectrum.pdf]]
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ =onDisk= data: lazy execution of data manipulations.
+  _Example:_ Data smoothing (=smooth=) and centroiding (=pickPeaks=).
+  #+BEGIN_SRC R :exports both :results output verbatim
+    ## 1) smooth the spectrum data
+    ## 2) perform centroiding
+    cntr <- msd %>% smooth(method = "MovingAverage", halfWindowSize = 2L) %>%
+        pickPeaks()
+
+    ## ... not executed yet ...
+    cntr@spectraProcessingQueue
+  #+END_SRC
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ Data manipulations are applied /on-the-fly/.
+  #+BEGIN_SRC R :results output graphics :file taurin-msdata-centroided.pdf :width 8 :height 5
+    ## Extract the MS data for our example ion;
+    ## smoothing and centroiding performed on-the-fly
+    taur_cntr <- extractMsData(cntr, mz = c(taur_mz - 0.01, taur_mz + 0.01),
+                               rt = taur_rt)
+    plotMsData(taur_cntr[[1]])
+  #+END_SRC
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ MS data for taurin, centroided.
+#+ATTR_LATEX: :center :placement [H] :width 11cm
+[[file:taurin-msdata-centroided.pdf]]
+
+** Application example: /centroiding/ of /profile/ MS data
+
++ /Make persistent/: write to MS data file.
+  _Example_: write the centroided data to disk.
+  #+BEGIN_SRC R
+    writeMSData(cntr, file = "centroided.mzML", copy = TRUE)
+
+    ## 1) All processings (smoothing and peak picking) are applied
+    ## 2) Data is exported as mzML
+  #+END_SRC
+
+** Finally
+
+#+ATTR_LATEX: :center
+*Thank you for your attention!*
+
+
+Collaborative work:
+- Laurent Gatto (CPU Cambridge, UK)
+- Sebastian Gibb (University Medicine Greifswald, Germany)
+- Johannes Rainer (Eurac Research, Italy)
+- Steffen Neumann (IPB Halle, Germany)
+
+
+
+
+clone me! https://github.com/jotsetung/EuroBioc2017-MSnbase.git
+

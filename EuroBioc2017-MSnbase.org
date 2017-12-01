@@ -10,7 +10,7 @@
 + Updates to =mzR=, =MSnbase= and =xcms= packages:
   - /on-the-fly/ data access.
   - MS data write support.
-  - towards a common MS infrastructure: =xcms= re-uses classes and concepts from
+  - towards a common MS infrastructure: =xcms= re-uses classes from
     =MSnbase=.
 
 ** =onDisk= /vs/ =inMem= data; why?
@@ -28,12 +28,10 @@
     object_size(msd)
 
     ## Number of spectra
-    length(msd)
+    head(fData(msd))
 
-    ## Number of values of first spectrum
-    length(mz(msd[[1]]))
   #+END_SRC
-+ Memory footprint: 977 MB (=inMem=) /vs/ 588 kB (=onDisk=).
++ Memory footprint: 977 MB (=inMem=) /vs/ 600 kB (=onDisk=).
 + Reading data on demand: /relatively/ fast for indexed mzML files.
 
 ** Application example: /centroiding/ of /profile/ MS data
@@ -51,12 +49,11 @@
     taur_msd <- extractMsData(msd, mz = c(taur_mz - 0.01, taur_mz + 0.01),
                               rt = taur_rt)
     plotMsData(taur_msd[[1]])
-    abline(h = taur_mz, col = "red", lty = 2)
 
   #+END_SRC
 
 + /centroiding/: represent mass peaks by their /centroid/
-  _Example_: plot one spectrum for the taurine ion.
+  _Example_: plot mass peak for taurin from one spectrum.
   #+BEGIN_SRC R
     library(magrittr)
 
@@ -67,7 +64,6 @@
     par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
     plot(mz(spct[[1]]), intensity(spct[[1]]), type = "h", ylab = "intensity",
          xlab = "m/z")
-    abline(v = taur_mz, lty = 2, col = "red")  
   #+END_SRC
 
 + =onDisk= data: lazy execution of data manipulations.
@@ -86,7 +82,6 @@
     taur_cntr <- extractMsData(cntr, mz = c(taur_mz - 0.01, taur_mz + 0.01),
                                rt = taur_rt)
     plotMsData(taur_cntr[[1]])
-    abline(h = taur_mz, col = "red", lty = 2)
   #+END_SRC
 
 + /Make persistent/: write to MS data file.
@@ -98,25 +93,13 @@
     ## 2) Data is exported as mzML
   #+END_SRC
 
-+ Chromatographic peak detection
-  _Example_: =findChromPeaks= to identify the Taurine peak
-  #+BEGIN_SRC R
-    ## Define the method and settings for peak detection
-    cwp <- CentWaveParam(peakwidth = c(2, 8))
-    xdata <- cntr %>% filterRt(rt = c(150, 180)) %>%
-        filterMz(mz = c(123, 128)) %>%
-        findChromPeaks(param = cwp)
-    chromPeaks(xdata, mz = taur_mz)
-
-  #+END_SRC
-
 ** Finally
 
 *Thank you for your attention!*
 
-Collaborative work
+Collaborative work:
 - Laurent Gatto (CPU Cambridge, UK)
-- Sebastian Gibb
+- Sebastian Gibb (University Medicine Greifswald, Germany)
 - Johannes Rainer (Eurac Research, Italy)
 - Steffen Neumann (IPB Halle, Germany)
 
