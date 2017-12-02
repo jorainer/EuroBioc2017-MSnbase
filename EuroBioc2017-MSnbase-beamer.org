@@ -74,14 +74,18 @@
 + _Example_: plot MS data for a metabolite:
   #+BEGIN_SRC R :results output graphics :file taurin-msdata.pdf :width 8 :height 5
     library(xcms)
+    library(magrittr)
 
     ## m/z for Taurine [M+H]+
     taur_mz <- 126.02194
     taur_rt <- c(169, 176)
 
     ## Extract the MS data for this ion
-    taur_msd <- extractMsData(msd, mz = c(taur_mz - 0.01, taur_mz + 0.01),
-                              rt = taur_rt)
+    taur_msd <- msd %>%
+	filterRt(rt = taur_rt) %>%
+	filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01)) %>%
+	extractMsData
+
     plotMsData(taur_msd[[1]])
 
   #+END_SRC
@@ -97,15 +101,13 @@
 + /centroiding/: represent mass peaks by their /centroid/.
 + _Example_: plot mass peak for taurin from one spectrum.
   #+BEGIN_SRC R :results output graphics :file taurin-spectrum.pdf :width 8 :height 5
-    library(magrittr)
+    ## Identify values corresponding to one spectrum
+    idx <- grep("F1.S0623", rownames(taur_msd[[1]]))
 
-    ## Extract one spectrum for the metabolite
-    spct <- msd %>% filterAcquisitionNum(n = 619L) %>%
-        filterMz(mz = c(taur_mz - 0.01, taur_mz + 0.01))
-
+    ## Plot the m/z and intensity
     par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
-    plot(mz(spct[[1]]), intensity(spct[[1]]), type = "h", ylab = "intensity",
-         xlab = "m/z")
+    plot(taur_msd[[1]]$mz[idx], taur_msd[[1]]$i[idx],
+	 type = "h", xlab = "m/z", ylab = "intensity")
   #+END_SRC
 
 ** Application example: /centroiding/ of /profile/ MS data
@@ -122,7 +124,7 @@
     ## 1) smooth the spectrum data
     ## 2) perform centroiding
     cntr <- msd %>% smooth(method = "MovingAverage", halfWindowSize = 2L) %>%
-        pickPeaks()
+	pickPeaks()
 
     ## ... not executed yet ...
     cntr@spectraProcessingQueue
