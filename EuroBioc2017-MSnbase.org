@@ -56,17 +56,8 @@
 
   #+END_SRC
 
-+ /centroiding/: represent mass peaks by their /centroid/
-  _Example_: plot mass peak for taurin from one spectrum.
-  #+BEGIN_SRC R
-    ## Identify values corresponding to one spectrum
-    idx <- grep("F1.S0623", rownames(taur_msd[[1]]))
-
-    ## Plot the m/z and intensity
-    par(mfrow = c(1, 1), mar = c(4.5, 4, 1, 1))
-    plot(taur_msd[[1]]$mz[idx], taur_msd[[1]]$i[idx],
-         type = "h", xlab = "m/z", ylab = "intensity")
-  #+END_SRC
++ /centroiding/: represent mass peaks by their /centroid/ (largest signal per mass
+  peak).
 
 + centroiding =onDisk= data: lazy execution of data manipulations.
   _Example:_ Data smoothing (=smooth=) and centroiding (=pickPeaks=).
@@ -84,6 +75,7 @@
     ## smoothing and centroiding performed on-the-fly
     taur_cntr <- extractMsData(cntr, rt = taur_rt,
                                mz = c(taur_mz - 0.01, taur_mz + 0.01))
+
     plotMsData(taur_cntr[[1]])
   #+END_SRC
 
