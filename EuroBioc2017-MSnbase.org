@@ -7,7 +7,7 @@
 
 *EuroBioc2017*, December 2017, Cambridge.
 
-+ Updates to =mzR=, =MSnbase= and =xcms= packages:
++ Updates to =MSnbase=, =mzR= and =xcms= packages:
   - /on-the-fly/ data access.
   - Mass spectrometry (MS) data write support.
   - towards a common MS infrastructure: =xcms= re-uses classes from
@@ -59,7 +59,7 @@
 + /centroiding/: represent mass peaks by their /centroid/ (largest signal per mass
   peak).
 
-+ centroiding =onDisk= data: lazy execution of data manipulations.
++ Centroiding =onDisk= data: lazy execution of data manipulations.
   _Example:_ Data smoothing (=smooth=) and centroiding (=pickPeaks=).
   #+BEGIN_SRC R
     ## 1) smooth the spectrum data
@@ -93,9 +93,9 @@
 *Thank you for your attention!*
 
 Collaborative work:
+- Johannes Rainer (Eurac Research, Italy); twitter/github: *jotsetung*
 - Laurent Gatto (CPU Cambridge, UK)
 - Sebastian Gibb (University Medicine Greifswald, Germany)
-- Johannes Rainer (Eurac Research, Italy)
 - Steffen Neumann (IPB Halle, Germany)
 
 

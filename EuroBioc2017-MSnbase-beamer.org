@@ -7,8 +7,7 @@
 #+LATEX_HEADER: \usepackage{parskip}
 #+LATEX_HEADER: \addbibresource{~/Documents/Unison/bib/references.bib}
 #+LATEX_HEADER: \usepackage{inconsolata}
-#+LATEX_HEADER: \definecolor{lightgrey}{RGB}{241,246,245}
-#+LATEX_HEADER: \definecolor{solarizedlightbg}{HTML}{FCF4DC}
+#+LATEX_HEADER: \definecolor{lightgrey}{RGB}{245,245,245}
 #+LATEX_HEADER: \makeatletter
 #+LATEX_HEADER: \patchcmd{\@verbatim}
 #+LATEX_HEADER:   {\verbatim@font}
@@ -46,9 +45,9 @@
 ** Introduction
 *EuroBioc2017*, December 2017, Cambridge.
 
-+ Updates to =mzR=, =MSnbase= and =xcms= packages:
-  - MS data write support.
++ Updates to =MSnbase=, =mzR= and =xcms= packages:
   - /on-the-fly/ data access.
+  - Mass spectrometry (MS) data write support.
   - towards a common MS infrastructure: =xcms= re-uses classes from =MSnbase=.
 
 ** =onDisk= /vs/ =inMem= data; why?
@@ -98,7 +97,8 @@
 
 ** Application example: /centroiding/ of /profile/ MS data
 
-+ /centroiding/: represent mass peaks by their /centroid/.
++ /centroiding/: represent mass peaks by their /centroid/ (largest signal for each
+  mass peak).
 + _Example_: plot mass peak for taurin from one spectrum.
   #+BEGIN_SRC R :results output graphics :file taurin-spectrum.pdf :width 8 :height 5
     ## Identify values corresponding to one spectrum
@@ -143,7 +143,7 @@
 
 ** Application example: /centroiding/ of /profile/ MS data
 
-+ MS data for taurin, centroided.
++ Centroided MS data for taurin.
 #+ATTR_LATEX: :center :placement [H] :width 11cm
 [[file:taurin-msdata-centroided.pdf]]
 
@@ -165,9 +165,9 @@
 
 
 Collaborative work:
+- Johannes Rainer (Eurac Research, Italy); github/twitter: *jotsetung*
 - Laurent Gatto (CPU Cambridge, UK)
 - Sebastian Gibb (University Medicine Greifswald, Germany)
-- Johannes Rainer (Eurac Research, Italy)
 - Steffen Neumann (IPB Halle, Germany)
 
 
